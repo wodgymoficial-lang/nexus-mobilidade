@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const base = process.env.SMOKE_URL || 'http://127.0.0.1:3000';
+const access = readFileSync(process.env.SMOKE_ACCESS_FILE || '.admin-access.local.txt', 'utf8');
+const email = access.match(/^E-mail: (.+)$/m)?.[1];
+const password = access.match(/^Senha: (.+)$/m)?.[1];
+if (!email || !password) throw new Error('O smoke test local requer as credenciais iniciais geradas por npm run setup.');
+const jsonHeaders = { 'Content-Type': 'application/json', Origin: base };
+const home = await fetch(base);
+assert.equal(home.status, 200);
+assert.ok((await home.text()).includes('Seu aplicativo.'));
+const protectedPage = await fetch(`${base}/admin`, { redirect: 'manual' });
+assert.equal(protectedPage.status, 307);
+assert.ok(protectedPage.headers.get('location')?.includes('/admin/login'));
+const anonymous = await fetch(`${base}/api/admin/smtp`, { method: 'PUT', headers: jsonHeaders, body: '{}' });
+assert.equal(anonymous.status, 401);
+const crossOrigin = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { ...jsonHeaders, Origin: 'https://other.example' }, body: '{}' });
+assert.equal(crossOrigin.status, 403);
+const login = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password }) });
+assert.equal(login.status, 200);
+const setCookie = login.headers.get('set-cookie');
+assert.ok(setCookie?.includes('HttpOnly'));
+assert.match(setCookie ?? '', /samesite=strict/i);
+const cookie = setCookie.split(';')[0];
+for (const path of ['/admin', '/admin/smtp', '/admin/contatos']) {
+  const response = await fetch(`${base}${path}`, { headers: { Cookie: cookie } });
+  assert.equal(response.status, 200, path);
+  assert.ok(!(await response.text()).includes('passwordEncrypted'), 'Senha SMTP não pode ser serializada no cliente.');
+}
+const invalidSmtp = await fetch(`${base}/api/admin/smtp`, { method: 'PUT', headers: { ...jsonHeaders, Cookie: cookie }, body: '{}' });
+assert.equal(invalidSmtp.status, 400);
+const invalidContact = await fetch(`${base}/api/contact`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ name: 'Teste' }) });
+assert.equal(invalidContact.status, 400);
+if (process.env.SMOKE_CREATE_CONTACT === '1') {
+  const marker = `Teste Docker CI ${Date.now()}`;
+  const contact = await fetch(`${base}/api/contact`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ name: marker, email: 'docker-ci@example.com', phone: '11999999999', city: 'Ambiente de teste', interest: 'Plataforma dedicada', message: 'Contato sintético criado pelo teste automatizado em banco descartável.', consent: true }) });
+  assert.equal(contact.status, 201);
+  const contacts = await fetch(`${base}/admin/contatos`, { headers: { Cookie: cookie } });
+  assert.ok((await contacts.text()).includes(marker), 'O contato deve estar persistido e visível no admin.');
+  const health = await fetch(`${base}/api/health`);
+  assert.equal(health.status, 200);
+}
+const secretFile = await fetch(`${base}/.env`);
+assert.equal(secretFile.status, 404);
+const logout = await fetch(`${base}/api/auth/logout`, { method: 'POST', headers: { ...jsonHeaders, Cookie: cookie } });
+assert.equal(logout.status, 200);
+assert.ok(logout.headers.get('set-cookie')?.includes('Max-Age=0'));
+console.log('Smoke HTTP OK: home, proteção do admin, login, páginas privadas, SMTP inválido, formulário inválido, origem, arquivos privados e logout.');
+console.log(process.env.SMOKE_CREATE_CONTACT === '1' ? 'Um contato sintético foi criado no banco de teste.' : 'Nenhum e-mail foi enviado e nenhum contato foi criado.');

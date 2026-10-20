@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SmtpSettings {
+  id                Int      @id @default(1)
+  host              String   @db.VarChar(255)
+  port              Int      @default(587)
+  secure            Boolean  @default(false)
+  username          String   @db.VarChar(255)
+  passwordEncrypted String   @db.Text
+  fromName          String   @db.VarChar(120)
+  fromEmail         String   @db.VarChar(254)
+  recipientEmail    String   @db.VarChar(254)
+  updatedAt         DateTime @updatedAt
+}
+
+model Lead {
+  id           String   @id @default(cuid())
+  name         String   @db.VarChar(120)
+  email        String   @db.VarChar(254)
+  phone        String   @db.VarChar(30)
+  company      String?  @db.VarChar(160)
+  city         String   @db.VarChar(160)
+  interest     String   @db.VarChar(50)
+  message      String   @db.Text
+  consentAt    DateTime @default(now())
+  emailSent    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}

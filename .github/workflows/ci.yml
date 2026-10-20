@@ -1,0 +1,42 @@
+name: Validate application and Docker Compose
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: Prepare isolated Docker environment
+        run: node scripts/setup-docker.mjs
+      - name: Validate Compose configuration
+        run: docker compose --env-file .env.docker config --quiet
+      - name: Build and start application, migrations and MySQL
+        run: docker compose --env-file .env.docker up --detach --build --wait --wait-timeout 240
+      - name: HTTP and database smoke test
+        env:
+          SMOKE_ACCESS_FILE: .admin-access.docker.local.txt
+          SMOKE_CREATE_CONTACT: '1'
+        run: node scripts/smoke.mjs
+      - name: Diagnostics
+        if: failure()
+        run: docker compose --env-file .env.docker logs --no-color --tail 100
+      - name: Remove disposable CI containers and database
+        if: always()
+        run: docker compose --env-file .env.docker down --volumes --remove-orphans

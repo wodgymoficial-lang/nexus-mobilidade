@@ -1,0 +1,67 @@
+name: nexus-mobilidade
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: nexus_mobilidade
+      MYSQL_USER: nexus
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Execute npm run setup:docker}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Execute npm run setup:docker}
+    volumes:
+      - nexus_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  migrate:
+    image: nexus-mobilidade-migrate:local
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Execute npm run setup:docker}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    image: nexus-mobilidade:local
+    build:
+      context: .
+      target: runner
+      args:
+        APP_URL: ${APP_URL:?Defina APP_URL no arquivo de ambiente}
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      DATABASE_URL: ${DATABASE_URL:?Execute npm run setup:docker}
+      APP_URL: ${APP_URL:?Defina APP_URL no arquivo de ambiente}
+      AUTH_SECRET: ${AUTH_SECRET:?Execute npm run setup:docker}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Execute npm run setup:docker}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Defina ADMIN_EMAIL}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:?Execute npm run setup:docker}
+    ports:
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  nexus_mysql:

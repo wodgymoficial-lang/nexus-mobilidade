@@ -1,0 +1,14 @@
+.git
+.github
+.next
+node_modules
+.env
+.env.*
+.admin-access*.txt
+*.log
+*.tsbuildinfo
+audit.local.json
+test-results
+docs
+README.md
+AGENTS.md
