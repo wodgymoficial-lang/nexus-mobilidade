@@ -20,6 +20,13 @@ model SmtpSettings {
   updatedAt         DateTime @updatedAt
 }
 
+model SiteSettings {
+  id              Int      @id @default(1)
+  whatsappPhone   String   @default("551130902861") @db.VarChar(15)
+  whatsappMessage String   @db.Text
+  updatedAt       DateTime @updatedAt
+}
+
 model Lead {
   id           String   @id @default(cuid())
   name         String   @db.VarChar(120)

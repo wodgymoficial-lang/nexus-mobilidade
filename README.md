@@ -102,6 +102,9 @@ O ambiente Docker usa um banco separado, acessível internamente pelo hostname `
 - `/admin`: resumo e situação do banco/SMTP.
 - `/admin/smtp`: host, porta, TLS, usuário, senha, remetente e destinatário; envio de teste.
 - `/admin/contatos`: contatos persistidos, com paginação e situação da notificação.
+- `/admin/whatsapp`: número de destino e mensagem inicial do botão flutuante. Padrão: +55 (11) 3090-2861.
+
+A mensagem do WhatsApp é o texto preenchido para o visitante enviar, não uma resposta automática. A configuração é salva no MySQL e consultada pelo site sem cache, sem necessidade de rebuild após editar. O botão mantém o contato padrão quando o banco está indisponível. A nova tabela é criada pela migração `202610200002_whatsapp`, aplicada automaticamente pelo Compose nas atualizações.
 
 As sessões usam assinatura HMAC, expiram em oito horas e ficam em cookie HttpOnly e SameSite=Strict (Secure quando `APP_URL` usa HTTPS). As APIs verificam a sessão e a origem das mutações. `APP_URL` deve coincidir com a origem acessada, inclusive protocolo e porta. Em produção, configure o endereço HTTPS real.
 

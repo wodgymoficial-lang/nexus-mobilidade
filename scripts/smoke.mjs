@@ -23,7 +23,7 @@ const setCookie = login.headers.get('set-cookie');
 assert.ok(setCookie?.includes('HttpOnly'));
 assert.match(setCookie ?? '', /samesite=strict/i);
 const cookie = setCookie.split(';')[0];
-for (const path of ['/admin', '/admin/smtp', '/admin/contatos']) {
+for (const path of ['/admin', '/admin/smtp', '/admin/contatos', '/admin/whatsapp']) {
   const response = await fetch(`${base}${path}`, { headers: { Cookie: cookie } });
   assert.equal(response.status, 200, path);
   assert.ok(!(await response.text()).includes('passwordEncrypted'), 'Senha SMTP não pode ser serializada no cliente.');
@@ -32,7 +32,19 @@ const invalidSmtp = await fetch(`${base}/api/admin/smtp`, { method: 'PUT', heade
 assert.equal(invalidSmtp.status, 400);
 const invalidContact = await fetch(`${base}/api/contact`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ name: 'Teste' }) });
 assert.equal(invalidContact.status, 400);
+const whatsappUnauthorized = await fetch(`${base}/api/admin/whatsapp`, { method: 'PUT', headers: jsonHeaders, body: '{}' });
+assert.equal(whatsappUnauthorized.status, 401);
+const whatsappInvalid = await fetch(`${base}/api/admin/whatsapp`, { method: 'PUT', headers: { ...jsonHeaders, Cookie: cookie }, body: JSON.stringify({ phone: 'invalid', message: 'Olá' }) });
+assert.equal(whatsappInvalid.status, 400);
+const publicWhatsapp = await fetch(`${base}/api/whatsapp`);
+assert.equal(publicWhatsapp.status, 200);
+assert.ok((await publicWhatsapp.json()).message);
 if (process.env.SMOKE_CREATE_CONTACT === '1') {
+  const whatsappSettings = { phone: '551130902861', message: 'Olá! Quero meu aplicativo.\nCidade: São Paulo.' };
+  const whatsappSave = await fetch(`${base}/api/admin/whatsapp`, { method: 'PUT', headers: { ...jsonHeaders, Cookie: cookie }, body: JSON.stringify(whatsappSettings) });
+  assert.equal(whatsappSave.status, 200);
+  const whatsappUpdated = await fetch(`${base}/api/whatsapp`);
+  assert.deepEqual(await whatsappUpdated.json(), whatsappSettings, 'A mensagem salva no admin deve aparecer na configuração pública sem rebuild.');
   const marker = `Teste Docker CI ${Date.now()}`;
   const contact = await fetch(`${base}/api/contact`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ name: marker, email: 'docker-ci@example.com', phone: '11999999999', city: 'Ambiente de teste', interest: 'Plataforma dedicada', message: 'Contato sintético criado pelo teste automatizado em banco descartável.', consent: true }) });
   assert.equal(contact.status, 201);
