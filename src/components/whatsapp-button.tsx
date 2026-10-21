@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { WhatsappIcon } from './whatsapp-icon';
 import { defaultWhatsapp, whatsappLink, whatsappSchema } from '@/lib/whatsapp';
 
 export function WhatsappButton() {
@@ -12,5 +12,5 @@ export function WhatsappButton() {
       .catch(() => {});
     return () => controller.abort();
   }, []);
-  return <a className="whatsapp-button" href={whatsappLink(settings.phone, settings.message)} target="_blank" rel="noopener noreferrer" aria-label="Falar com a Nexus Mobilidade pelo WhatsApp"><Image src="/images/whatsapp.svg" width={25} height={25} alt="" aria-hidden="true"/><span>Fale pelo WhatsApp</span></a>;
+  return <a className="whatsapp-button" href={whatsappLink(settings.phone, settings.message)} target="_blank" rel="noopener noreferrer" aria-label="Falar com a Nexus Mobilidade pelo WhatsApp"><WhatsappIcon/><span>Fale pelo WhatsApp</span></a>;
 }
