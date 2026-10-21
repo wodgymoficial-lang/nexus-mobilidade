@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import './product-previews.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || 'http://127.0.0.1:3000'),

@@ -118,6 +118,8 @@ Os limites contra abuso são em memória e globais por processo. Para múltiplas
 
 Não há integração com o backend operacional da 21Driver. As interfaces da home são ilustrações, identificadas como tal; demonstrações comerciais reais devem ser feitas no sistema existente. A apresentação da Vou Te Buscar usa informações fornecidas pelo responsável pelo projeto; a composição gráfica da seção é ilustrativa.
 
+As demonstrações do app motorista e do painel seguem as referências visuais fornecidas, com nomes, indicadores, identificadores e mapas fictícios. Os prints originais não fazem parte dos arquivos públicos. Na aba do painel, é possível alternar entre visão geral e detalhes de uma corrida de demonstração.
+
 ## Verificação e produção
 
 ```sh
