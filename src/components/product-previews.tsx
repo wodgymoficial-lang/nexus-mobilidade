@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Building2, CalendarDays, CarFront, ChartNoAxesCombined, Check, ChevronDown, CircleHelp, Crosshair, Eye, Filter, Flame, Gauge, Headphones, Info, LayoutGrid, Map, MapPin, Menu, Route, Settings, Sun, Users } from 'lucide-react';
+import { ArrowLeft, Building2, CalendarDays, CarFront, ChartNoAxesCombined, Check, ChevronDown, CircleHelp, Crosshair, Eye, Filter, Flame, Gauge, Headphones, Info, LayoutGrid, Map, MapPin, Menu, Route, Settings, Sun, UserRound, Users } from 'lucide-react';
 
 // Reconstructed from layout references. All figures, identifiers and maps are fictional.
 export function DemoCityMap({ trip = false }: { trip?: boolean }) {
@@ -15,6 +15,26 @@ export function DemoCityMap({ trip = false }: { trip?: boolean }) {
     <g fill="#6f9aab" fontFamily="Arial, sans-serif" fontSize="9"><text x="140" y="122">SETOR NORTE</text><text x="30" y="365">CENTRO</text><text x="205" y="440">SETOR SUL</text><text x="112" y="255" transform="rotate(18 112 255)">Avenida Central</text><text x="240" y="555" transform="rotate(-70 240 555)">Via de demonstração</text></g>
     {trip && <><path d="m116 385 57-44-11-69 65-50 64 44" stroke="#3e87b3" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/><path d="M116 358c-12 0-20 8-20 19 0 16 20 32 20 32s20-16 20-32c0-11-8-19-20-19Z" fill="#3b82f6" stroke="#fff" strokeWidth="2"/><circle cx="116" cy="377" r="6" fill="#fff"/><path d="M291 239c-12 0-20 8-20 19 0 16 20 32 20 32s20-16 20-32c0-11-8-19-20-19Z" fill="#10b981" stroke="#fff" strokeWidth="2"/><circle cx="291" cy="258" r="6" fill="#fff"/></>}
   </svg>;
+}
+
+export function PassengerScreen({ route = false }: { route?: boolean }) {
+  return <div className="reference-passenger-screen" role="img" aria-label={`Layout ilustrativo do app passageiro: ${route ? 'trajeto fictício' : 'mapa com localização fictícia'}, menu, perfil e campo de destino, com marca personalizável`}>
+    <div className="reference-passenger-map">
+      <DemoCityMap/>
+      <svg className="reference-passenger-route" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+        {route && <path d="m116 118 22-18 24 24 39 12-17 25 15 52 38 27-9 33 46 29 33-12 26 35-15 39 13 31-30 42 12 31-30 20 12 34 34-8" transform="scale(1 .72)" stroke="#172126" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>}
+        <circle cx={route ? 279 : 208} cy={route ? 376 : 350} r="19" fill="#4285f4" fillOpacity=".15"/>
+        <circle cx={route ? 279 : 208} cy={route ? 376 : 350} r="8" fill="#4285f4" stroke="#fff" strokeWidth="3"/>
+      </svg>
+    </div>
+    <div className="reference-passenger-menu"><Menu/></div>
+    <div className="reference-passenger-profile"><UserRound/></div>
+    <div className="reference-passenger-brand"><CarFront/><span>SUA MARCA</span></div>
+    <div className="reference-passenger-locate"><Crosshair/></div>
+    <div className="reference-passenger-destination">Olá! Para onde vamos?</div>
+    <div className="reference-passenger-content"><span>SUA MARCA</span></div>
+    <div className="reference-passenger-navigation"><span>‹</span><i/><span>≡</span></div>
+  </div>;
 }
 
 export function DriverScreen() {
